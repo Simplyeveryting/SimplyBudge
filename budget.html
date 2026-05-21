@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SimplyBudget Dashboard</title>
+    <!-- Dynamic Theme-Matching Browser Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+    
+    <style>
+        /* Modern Premium Dark Theme & Layout */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f1123 0%, #171932 50%, #0b0c16 100%);
+            color: #f3f4f6;
+            min-height: 100vh;
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* Top Header Controls */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 5px 2px;
+        }
+
+        .app-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            background: linear-gradient(to right, #10b981, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .controls-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        select, button {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #f3f4f6;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        select:hover, button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .toggle-btn.active {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            font-weight: 600;
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+        }
+
+        /* Triple Card Display Matrix Top Rows */
+        .dashboard-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 25px;
+        }
+
+        /* Glassmorphic Core Container Styling */
+        .hero-card {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .hero-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .pool-section {
+            text-align: center;
+        }
+
+        .hero-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #9ca3af;
+            margin-bottom: 6px;
+        }
+
+        .pool-amount {
+            font-size: 1.9rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            transition: color 0.3s ease;
+        }
+
+        .pool-safe { color: #10b981; text-shadow: 0 0 20px rgba(16, 185, 129, 0.2); }
+        .pool-warning { color: #f59e0b; text-shadow: 0 0 20px rgba(245, 158, 11, 0.2); }
+        .pool-danger { color: #ef4444; text-shadow: 0 0 20px rgba(239, 68, 68, 0.2); }
+        
+        .pool-outstanding-glow {
+            color: #ff4d4d;
+            text-shadow: 0 0 25px rgba(239, 68, 68, 0.35);
+        }
+
+        .pool-savings-glow {
+            color: #06b6d4;
+            text-shadow: 0 0 25px rgba(6, 182, 212, 0.35);
+        }
+
+        .progress-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            height: 6px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(to right, #10b981, #3b82f6);
+            border-radius: 10px;
+            transition: width 0.4s ease;
+        }
+
+        /* Combined Micro Layout Breakdowns panels */
+        .income-breakdown-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.18);
+            border-radius: 12px;
+            padding: 12px 8px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .stat-box {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .stat-value {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+        .stat-value.total-income-color { color: #10b981; }
+        .stat-value.spending-money-color { color: #e5e7eb; }
+
+        /* Multi Column Form Layout Configurations */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        /* General Form & Card Styling */
+        .panel {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            padding: 20px;
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #e5e7eb;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .input-box {
+            margin-bottom: 14px;
+            flex: 1;
+        }
+
+        .input-box label {
+            display: block;
+            font-size: 0.8rem;
+            color: #9ca3af;
+            margin-bottom: 6px;
+        }
+
+        .input-box input, .input-box select {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 1rem; /* Better mobile readability prevents iOS zoom */
+            transition: all 0.2s ease;
+        }
+
+        .input-box input:focus, .input-box select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        .name-setup-box {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 12px 12px 2px 12px;
+            margin-bottom: 15px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: #10b981;
+            color: #fff;
+            border: none;
+            padding: 14px;
+            font-weight: 600;
+            font-size: 1rem;
+            border-radius: 10px;
+            margin-top: 5px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+            cursor: pointer;
+        }
+
+        .submit-btn:hover {
+            background: #059669;
+        }
+
+        /* Ledger Output Configurations */
+        .ledger-container {
+            max-height: 470px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 4px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-top: 40px;
+            font-style: italic;
+        }
+
+        .ledger-container::-webkit-scrollbar { width: 4px; }
+        .ledger-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+        .ledger-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 12px;
+            background: rgba(0, 0, 0, 0.15);
+            border-left: 4px solid #fff;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .ledger-item.status-paid {
+            opacity: 0.45;
+            background: rgba(0, 0, 0, 0.04);
+            border-left-color: #4b5563 !important;
+        }
+
+        .item-main-layout {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 0; /* Prevents text overflow */
+        }
+
+        /* Interactive Bubbles Visual Treatment Engine */
+        .status-bubble {
+            padding: 8px 10px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+            text-align: center;
+            min-width: 90px;
+        }
+
+        /* Premium Crimson Vibrant Outstanding Button Styling */
+        .status-bubble.bubble-outstanding {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(185, 28, 28, 0.15) 100%);
+            color: #ff6b6b;
+            border: 1px solid rgba(239, 68, 68, 0.45);
+            box-shadow: 0 3px 10px rgba(239, 68, 68, 0.15);
+        }
+
+        .status-bubble.bubble-paid {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+
+        .income-badge {
+            padding: 8px 10px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            text-align: center;
+            min-width: 90px;
+            background: rgba(59, 130, 246, 0.08);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.18);
+            user-select: none;
+        }
+
+        .savings-badge {
+            padding: 8px 10px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            text-align: center;
+            min-width: 90px;
+            background: rgba(6, 182, 212, 0.08);
+            color: #22d3ee;
+            border: 1px solid rgba(6, 182, 212, 0.18);
+            user-select: none;
+        }
+
+        /* Assignment Badges inside ledger items */
+        .assignment-badge {
+            display: inline-block;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 4px;
+            text-transform: uppercase;
+        }
+        .assign-p1 { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .assign-p2 { background: rgba(167, 139, 250, 0.15); color: #c084fc; border: 1px solid rgba(167, 139, 250, 0.3); }
+        .assign-shared { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+
+        .item-info {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .item-info div:first-child {
+            font-weight: 600;
+            color: #f3f4f6;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .ledger-item.status-paid .item-info div:first-child {
+            text-decoration: line-through;
+            color: #9ca3af;
+        }
+
+        .item-info div:last-child {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .item-val-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-left: 4px;
+        }
+
+        .item-amount {
+            font-weight: 700;
+            font-size: 0.95rem;
+            white-space: nowrap;
+        }
+
+        .delete-btn {
+            background: transparent;
+            border: none;
+            color: #9ca3af;
+            font-size: 1.3rem;
+            padding: 4px 8px;
+            cursor: pointer;
+            border-radius: 6px;
+        }
+
+        /* Mobile Optimization Media Engine */
+        @media (max-width: 900px) {
+            /* Transform dashboard row into a clean swipe system instead of stacking vertically */
+            .dashboard-row {
+                display: flex;
+                overflow-x: auto;
+                scroll-snap-type: x mandatory;
+                gap: 12px;
+                margin-left: -16px;
+                margin-right: -16px;
+                padding: 0 16px 12px 16px;
+                scrollbar-width: none; /* Hide scrollbar for clean card feel */
+            }
+            .dashboard-row::-webkit-scrollbar {
+                display: none;
+            }
+            .hero-card {
+                flex: 0 0 88%;
+                scroll-snap-align: center;
+                box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+            }
+            .grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            .input-row {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Top Bar Controls -->
+    <div class="header">
+        <div class="app-title">SimplyBudget</div>
+        <div class="controls-group">
+            <select id="currencySelect" onchange="updateDashboard()">
+                <option value="ZAR">ZAR (R)</option>
+                <option value="USD">USD ($)</option>
+                <option value="EUR">EUR (€)</option>
+            </select>
+            <button id="viewWeekly" class="toggle-btn active" onclick="changeTimeframe('weekly')">Wk</button>
+            <button id="viewMonthly" class="toggle-btn" onclick="changeTimeframe('monthly')">Mo</button>
+        </div>
+    </div>
+
+    <!-- Triple Hero Display Cards Grid (Swipeable on Mobile) -->
+    <div class="dashboard-row">
+        <!-- BUBBLE 1: Main Capital Allocation Pool -->
+        <div class="hero-card">
+            <div class="hero-layout">
+                <div class="pool-section">
+                    <div class="hero-title" id="poolTitle">Weekly Available Pool</div>
+                    <div class="pool-amount pool-safe" id="totalDisplay">R 0.00</div>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="progressBar"></div>
+                    </div>
+                </div>
+                
+                <div class="income-breakdown-panel">
+                    <div class="stat-box">
+                        <div class="stat-label" id="incomeLabel">Income</div>
+                        <div class="stat-value total-income-color" id="totalIncomeDisplay">R 0.00</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label" id="billLabel">Deduct</div>
+                        <div class="stat-value" style="color: #ef4444;" id="totalBillsDisplay">R 0.00</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label" id="spendingLabel">Leftover</div>
+                        <div class="stat-value spending-money-color" id="spendingMoneyDisplay">R 0.00</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BUBBLE 2: Split Assignment & Outstanding Debt Tracking Center -->
+        <div class="hero-card" style="background: rgba(239, 68, 68, 0.02); border-color: rgba(239, 68, 68, 0.12);">
+            <div class="hero-layout" style="justify-content: space-between; height: 100%;">
+                <div class="pool-section" style="margin-top: 2px; margin-bottom: 2px;">
+                    <div class="hero-title" id="outstandingTitle" style="color: #f87171;">Outstanding Bills</div>
+                    <div class="pool-amount pool-outstanding-glow" id="outstandingDisplay">R 0.00</div>
+                </div>
+                
+                <!-- Individual Dynamic Breakdown Split Matrix -->
+                <div class="income-breakdown-panel" style="background: rgba(0, 0, 0, 0.25); margin-top: 5px;">
+                    <div class="stat-box" style="border-right: 1px solid rgba(255,255,255,0.05); grid-column: span 1;">
+                        <div class="stat-label" style="color: #60a5fa;" id="lblP1Owes">Person 1 Owes</div>
+                        <div class="stat-value" style="color: #60a5fa; font-size: 0.85rem;" id="p1OutstandingDisplay">R 0.00</div>
+                    </div>
+                    <div class="stat-box" style="border-right: 1px solid rgba(255,255,255,0.05); grid-column: span 1;">
+                        <div class="stat-label" style="color: #c084fc;" id="lblP2Owes">Person 2 Owes</div>
+                        <div class="stat-value" style="color: #c084fc; font-size: 0.85rem;" id="p2OutstandingDisplay">R 0.00</div>
+                    </div>
+                    <div class="stat-box" style="grid-column: span 1;">
+                        <div class="stat-label" style="color: #fbbf24;">Shared</div>
+                        <div class="stat-value" style="color: #fbbf24; font-size: 0.85rem;" id="sharedOutstandingDisplay">R 0.00</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BUBBLE 3: Savings Accumulation Tracker -->
+        <div class="hero-card" style="background: rgba(6, 182, 212, 0.02); border-color: rgba(6, 182, 212, 0.12);">
+            <div class="hero-layout" style="justify-content: space-between; height: 100%;">
+                <div class="pool-section" style="margin-top: 2px; margin-bottom: 2px;">
+                    <div class="hero-title" id="savingsTitle" style="color: #22d3ee;">Total Savings Set Aside</div>
+                    <div class="pool-amount pool-savings-glow" id="savingsDisplay">R 0.00</div>
+                </div>
+                
+                <!-- Individual Savings Breakdown Matrix -->
+                <div class="income-breakdown-panel" style="background: rgba(0, 0, 0, 0.25); margin-top: 5px;">
+                    <div class="stat-box" style="border-right: 1px solid rgba(255,255,255,0.05); grid-column: span 1;">
+                        <div class="stat-label" style="color: #60a5fa;" id="lblP1Saved">Person 1 Saved</div>
+                        <div class="stat-value" style="color: #60a5fa; font-size: 0.85rem;" id="p1SavingsDisplay">R 0.00</div>
+                    </div>
+                    <div class="stat-box" style="border-right: 1px solid rgba(255,255,255,0.05); grid-column: span 1;">
+                        <div class="stat-label" style="color: #c084fc;" id="lblP2Saved">Person 2 Saved</div>
+                        <div class="stat-value" style="color: #c084fc; font-size: 0.85rem;" id="p2SavingsDisplay">R 0.00</div>
+                    </div>
+                    <div class="stat-box" style="grid-column: span 1;">
+                        <div class="stat-label" style="color: #fbbf24;">Shared</div>
+                        <div class="stat-value" style="color: #fbbf24; font-size: 0.85rem;" id="sharedSavingsDisplay">R 0.00</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Input Forms and Ledger Panels -->
+    <div class="grid">
+        <!-- Input Block -->
+        <div class="panel">
+            <div class="panel-title">✍️ Add Entry</div>
+            
+            <!-- Dynamic Name Configuration Row -->
+            <div class="name-setup-box">
+                <div class="input-row">
+                    <div class="input-box">
+                        <label>Your Name</label>
+                        <input type="text" id="namePerson1" value="Dylan" oninput="handleNameChange()">
+                    </div>
+                    <div class="input-box">
+                        <label>Partner Name</label>
+                        <input type="text" id="namePerson2" value="Partner" oninput="handleNameChange()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-row">
+                <div class="input-box">
+                    <label>Description / Item</label>
+                    <input type="text" id="entryName" placeholder="e.g. Rent, Groceries, Savings">
+                </div>
+                <div class="input-box">
+                    <label>Amount</label>
+                    <input type="number" id="entryAmount" placeholder="0.00" step="any">
+                </div>
+            </div>
+
+            <div class="input-row">
+                <div class="input-box">
+                    <label>Type</label>
+                    <select id="entryType" onchange="handleTypeChange()">
+                        <option value="income">Salary / Income (+)</option>
+                        <option value="bill">Fixed Bill (-)</option>
+                        <option value="savings">Savings (-)</option>
+                    </select>
+                </div>
+                <div class="input-box">
+                    <label>Cycle</label>
+                    <select id="entryFrequency" onchange="toggleFormDates()">
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="input-row">
+                <!-- Dynamic Pay / Due Date Setup Box -->
+                <div class="input-box" id="dateInputBox">
+                    <label id="dateLabel">Payout Schedule Day</label>
+                    <select id="entryDateValue">
+                        <!-- Options adjust based on selected cycle via JS -->
+                    </select>
+                </div>
+                
+                <!-- Assignment Selection Group -->
+                <div class="input-box" id="assignmentInputBox" style="display:none;">
+                    <label id="assignmentLabel">Assign Obligation To</label>
+                    <select id="entryAssignment">
+                        <option value="p1" id="optP1">Dylan</option>
+                        <option value="p2" id="optP2">Partner</option>
+                        <option value="shared">Shared (50/50 split)</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="submit-btn" onclick="saveEntry()">Save Entry</button>
+        </div>
+
+        <!-- Real-Time Database List Output Panel -->
+        <div class="panel">
+            <div class="panel-title">📋 Budget Ledger</div>
+            <div class="ledger-container" id="ledgerList">
+                <!-- Entries load dynamically here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let ledger = JSON.parse(localStorage.getItem('jointBudgetLedger')) || [];
+    let configNames = JSON.parse(localStorage.getItem('budgetNamesConfig')) || { p1: "Dylan", p2: "Partner" };
+    let currentTimeframe = 'weekly';
+
+    const currencyConfig = {
+        ZAR: { symbol: "R ", rate: 1.0 },
+        USD: { symbol: "$ ", rate: 0.055 },
+        EUR: { symbol: "€ ", rate: 0.051 }
+    };
+
+    function handleNameChange() {
+        const p1Name = document.getElementById('namePerson1').value.trim() || "Person 1";
+        const p2Name = document.getElementById('namePerson2').value.trim() || "Person 2";
+        
+        configNames.p1 = p1Name;
+        configNames.p2 = p2Name;
+        localStorage.setItem('budgetNamesConfig', JSON.stringify(configNames));
+        
+        // Sync Dropdown configuration labels dynamically
+        document.getElementById('optP1').innerText = p1Name;
+        document.getElementById('optP2').innerText = p2Name;
+        
+        updateDashboard();
+    }
+
+    function handleTypeChange() {
+        toggleFormDates();
+        const type = document.getElementById('entryType').value;
+        const assignBox = document.getElementById('assignmentInputBox');
+        const assignLabel = document.getElementById('assignmentLabel');
+
+        if (type === 'bill' || type === 'savings') {
+            assignBox.style.display = 'block';
+            assignLabel.innerText = type === 'savings' ? 'Assign Contributor' : 'Assign Obligation To';
+        } else {
+            assignBox.style.display = 'none';
+        }
+    }
+
+    function toggleFormDates() {
+        const freq = document.getElementById('entryFrequency').value;
+        const type = document.getElementById('entryType').value;
+        const label = document.getElementById('dateLabel');
+        const select = document.getElementById('entryDateValue');
+        
+        select.innerHTML = "";
+        
+        if (type === 'income') {
+            label.innerText = 'Payout Schedule Day';
+        } else if (type === 'savings') {
+            label.innerText = 'Deposit Target Day';
+        } else {
+            label.innerText = 'Bill Due Date';
+        }
+
+        if (freq === 'weekly') {
+            const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+            days.forEach(d => select.innerHTML += `<option value="${d}">${d}</option>`);
+        } else {
+            for(let i=1; i<=31; i++) {
+                let suffix = "th";
+                if(i===1 || i===21 || i===31) suffix = "st";
+                else if(i===2 || i===22) suffix = "nd";
+                else if(i===3 || i===23) suffix = "rd";
+                select.innerHTML += `<option value="${i}${suffix}">Day ${i}${suffix}</option>`;
+            }
+        }
+    }
+
+    function changeTimeframe(timeframe) {
+        currentTimeframe = timeframe;
+        document.getElementById('viewWeekly').classList.toggle('active', timeframe === 'weekly');
+        document.getElementById('viewMonthly').classList.toggle('active', timeframe === 'monthly');
+        updateDashboard();
+    }
+
+    function saveEntry() {
+        const nameInput = document.getElementById('entryName');
+        const amountInput = document.getElementById('entryAmount');
+        const typeInput = document.getElementById('entryType');
+        const freqInput = document.getElementById('entryFrequency');
+        const dateInput = document.getElementById('entryDateValue');
+        const assignInput = document.getElementById('entryAssignment');
+
+        const amount = parseFloat(amountInput.value);
+        if (!nameInput.value.trim() || isNaN(amount) || amount <= 0) {
+            alert("Please provide a valid entry name and numeric value.");
+            return;
+        }
+
+        const newEntry = {
+            id: Date.now(),
+            name: nameInput.value.trim(),
+            amount: amount,
+            type: typeInput.value,
+            frequency: freqInput.value,
+            dateValue: dateInput.value,
+            assignment: typeInput.value !== 'income' ? assignInput.value : 'none',
+            paid: false 
+        };
+
+        ledger.push(newEntry);
+        localStorage.setItem('jointBudgetLedger', JSON.stringify(ledger));
+        
+        // Resetting entry forms cleanly, bypassing name configs
+        amountInput.value = "";
+        nameInput.value = "";
+        typeInput.value = "income";
+        freqInput.value = "weekly";
+        handleTypeChange(); 
+        
+        document.activeElement.blur(); // Dismiss mobile keyboard beautifully
+        updateDashboard();
+    }
+
+    function togglePaidStatus(id) {
+        ledger = ledger.map(item => {
+            if (item.id === id && item.type === 'bill') {
+                return { ...item, paid: !item.paid };
+            }
+            return item;
+        });
+        localStorage.setItem('jointBudgetLedger', JSON.stringify(ledger));
+        updateDashboard();
+    }
+
+    function removeEntry(id) {
+        ledger = ledger.filter(item => item.id !== id);
+        localStorage.setItem('jointBudgetLedger', JSON.stringify(ledger));
+        updateDashboard();
+    }
+
+    function updateDashboard() {
+        const currency = document.getElementById('currencySelect').value;
+        const config = currencyConfig[currency];
+        
+        // Refresh Label Matrices
+        document.getElementById('lblP1Owes').innerText = `${configNames.p1} Owes`;
+        document.getElementById('lblP2Owes').innerText = `${configNames.p2} Owes`;
+        document.getElementById('lblP1Saved').innerText = `${configNames.p1} Saved`;
+        document.getElementById('lblP2Saved').innerText = `${configNames.p2} Saved`;
+
+        let totalIncome = 0;
+        let totalExpenses = 0;
+        let totalOutstandingBills = 0;
+        let totalSavings = 0;
+        
+        let p1Outstanding = 0;
+        let p2Outstanding = 0;
+        let sharedOutstanding = 0;
+
+        let p1Savings = 0;
+        let p2Savings = 0;
+        let sharedSavings = 0;
+
+        const listContainer = document.getElementById('ledgerList');
+        listContainer.innerHTML = "";
+
+        if (ledger.length === 0) {
+            listContainer.innerHTML = '<div class="empty-state">No entries logged yet. Add your details to get started!</div>';
+        }
+
+        ledger.forEach(item => {
+            let standardizedAmount = item.amount;
+            
+            if (currentTimeframe === 'weekly') {
+                if (item.frequency === 'monthly') standardizedAmount = item.amount / 4;
+            } else if (currentTimeframe === 'monthly') {
+                if (item.frequency === 'weekly') standardizedAmount = item.amount * 4;
+            }
+
+            if (item.type === 'income') {
+                totalIncome += standardizedAmount;
+            } else if (item.type === 'savings') {
+                totalSavings += standardizedAmount;
+                totalExpenses += standardizedAmount;
+                
+                if (item.assignment === 'p1') p1Savings += standardizedAmount;
+                else if (item.assignment === 'p2') p2Savings += standardizedAmount;
+                else if (item.assignment === 'shared') sharedSavings += standardizedAmount;
+            } else {
+                totalExpenses += standardizedAmount;
+                if (!item.paid) {
+                    totalOutstandingBills += standardizedAmount;
+                    
+                    if (item.assignment === 'p1') p1Outstanding += standardizedAmount;
+                    else if (item.assignment === 'p2') p2Outstanding += standardizedAmount;
+                    else if (item.assignment === 'shared') sharedOutstanding += standardizedAmount;
+                }
+            }
+
+            let convertedDisplayVal = (item.amount * config.rate).toFixed(2);
+
+            const entryItem = document.createElement('div');
+            const isItemPaidBill = (item.type === 'bill' && item.paid);
+            entryItem.className = `ledger-item ${isItemPaidBill ? 'status-paid' : ''}`;
+            
+            if (item.type === 'income') entryItem.style.borderLeftColor = '#10b981';
+            else if (item.type === 'savings') entryItem.style.borderLeftColor = '#06b6d4';
+            else entryItem.style.borderLeftColor = '#ef4444';
+            
+            let leftStatusMarkup = '';
+            let assignmentBadgeMarkup = '';
+            
+            if (item.type === 'bill' || item.type === 'savings') {
+                if (item.type === 'bill') {
+                    leftStatusMarkup = `
+                        <div class="status-bubble ${item.paid ? 'bubble-paid' : 'bubble-outstanding'}" onclick="togglePaidStatus(${item.id})">
+                            ${item.paid ? '✓ Paid' : 'Owed'}
+                        </div>`;
+                } else {
+                    leftStatusMarkup = `<div class="savings-badge">Saved</div>`;
+                }
+                
+                let labelText = "Shared";
+                let assignClass = "assign-shared";
+                
+                if (item.assignment === 'p1') {
+                    labelText = configNames.p1;
+                    assignClass = "assign-p1";
+                } else if (item.assignment === 'p2') {
+                    labelText = configNames.p2;
+                    assignClass = "assign-p2";
+                }
+                
+                assignmentBadgeMarkup = `<span class="assignment-badge ${assignClass}">${labelText}</span>`;
+            } else {
+                leftStatusMarkup = `<div class="income-badge">Inflow</div>`;
+            }
+
+            entryItem.innerHTML = `
+                <div class="item-main-layout">
+                    ${leftStatusMarkup}
+                    <div class="item-info">
+                        <div>${item.name} ${assignmentBadgeMarkup}</div>
+                        <div>${item.frequency.charAt(0).toUpperCase() + item.frequency.slice(1)} • ${item.dateValue}</div>
+                    </div>
+                </div>
+                <div class="item-val-box">
+                    <span class="item-amount" style="color: ${item.type === 'income' ? '#10b981' : item.type === 'savings' ? '#06b6d4' : '#ef4444'}">
+                        ${item.type === 'income' ? '+' : '-'}${config.symbol}${convertedDisplayVal}
+                    </span>
+                    <button class="delete-btn" onclick="removeEntry(${item.id})">×</button>
+                </div>
+            `;
+            listContainer.appendChild(entryItem);
+        });
+
+        const spendingMoney = totalIncome - totalExpenses;
+        const capitalizedTimeframe = currentTimeframe.charAt(0).toUpperCase() + currentTimeframe.slice(1);
+        
+        document.getElementById('poolTitle').innerText = `${capitalizedTimeframe} Available Pool`;
+        document.getElementById('outstandingTitle').innerText = `${capitalizedTimeframe} Outstanding`;
+        document.getElementById('savingsTitle').innerText = `${capitalizedTimeframe} Total Savings`;
+        
+        const displayTotal = document.getElementById('totalDisplay');
+        displayTotal.innerText = `${spendingMoney < 0 ? '-' : ''}${config.symbol}${Math.abs(spendingMoney * config.rate).toFixed(2)}`;
+        
+        document.getElementById('incomeLabel').innerText = `Income`;
+        document.getElementById('billLabel').innerText = `Deduct`;
+        document.getElementById('spendingLabel').innerText = `Left`;
+        
+        document.getElementById('totalIncomeDisplay').innerText = `${config.symbol}${(totalIncome * config.rate).toFixed(2)}`;
+        document.getElementById('totalBillsDisplay').innerText = `${config.symbol}${(totalExpenses * config.rate).toFixed(2)}`;
+        
+        const targetSpendingDisplay = document.getElementById('spendingMoneyDisplay');
+        targetSpendingDisplay.innerText = `${spendingMoney < 0 ? '-' : ''}${config.symbol}${Math.abs(spendingMoney * config.rate).toFixed(2)}`;
+        targetSpendingDisplay.style.color = spendingMoney >= 0 ? '#10b981' : '#ef4444';
+
+        document.getElementById('outstandingDisplay').innerText = `${config.symbol}${(totalOutstandingBills * config.rate).toFixed(2)}`;
+        document.getElementById('savingsDisplay').innerText = `${config.symbol}${(totalSavings * config.rate).toFixed(2)}`;
+        
+        // Sub-Breakdowns Dynamic Assignment
+        document.getElementById('p1OutstandingDisplay').innerText = `${config.symbol}${(p1Outstanding * config.rate).toFixed(2)}`;
+        document.getElementById('p2OutstandingDisplay').innerText = `${config.symbol}${(p2Outstanding * config.rate).toFixed(2)}`;
+        document.getElementById('sharedOutstandingDisplay').innerText = `${config.symbol}${(sharedOutstanding * config.rate).toFixed(2)}`;
+
+        document.getElementById('p1SavingsDisplay').innerText = `${config.symbol}${(p1Savings * config.rate).toFixed(2)}`;
+        document.getElementById('p2SavingsDisplay').innerText = `${config.symbol}${(p2Savings * config.rate).toFixed(2)}`;
+        document.getElementById('sharedSavingsDisplay').innerText = `${config.symbol}${(sharedSavings * config.rate).toFixed(2)}`;
+
+        displayTotal.className = "pool-amount";
+        const progressBar = document.getElementById('progressBar');
+
+        if (totalIncome === 0) {
+            progressBar.style.width = "0%";
+            displayTotal.classList.add('pool-danger');
+            return;
+        }
+
+        const remainingPct = Math.max(0, Math.min(100, (spendingMoney / totalIncome) * 100));
+        progressBar.style.width = `${remainingPct}%`;
+
+        if (remainingPct > 50) {
+            displayTotal.classList.add('pool-safe');
+        } else if (remainingPct > 15) {
+            displayTotal.classList.add('pool-warning');
+        } else {
+            displayTotal.classList.add('pool-danger');
+        }
+    }
+
+    window.onload = function() {
+        document.getElementById('namePerson1').value = configNames.p1;
+        document.getElementById('namePerson2').value = configNames.p2;
+        
+        handleNameChange();
+        handleTypeChange();
+    };
+</script>
+
+</body>
+</html>
